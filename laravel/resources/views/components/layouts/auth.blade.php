@@ -1,6 +1,6 @@
 <x-layouts.base title="Iniciar sesión">
 <div class="grid min-h-screen grid-rows-[auto_1fr] lg:grid-cols-2 lg:grid-rows-1">
-<aside class="relative flex flex-col overflow-hidden bg-ink px-7 py-6 text-white sm:px-12 lg:p-16">
+<aside class="relative flex flex-col overflow-hidden bg-[#142b35] px-7 py-6 text-white sm:px-12 lg:p-16">
 <x-brand />
 <div class="relative z-10 my-auto hidden max-w-lg py-20 lg:block">
 <p class="eyebrow text-mint">INFORMACIÓN CON PROPÓSITO</p>
@@ -14,8 +14,7 @@
 </div>
 </div>
 <p class="relative z-10 mt-4 text-xs leading-5 text-slate-400 lg:mt-0">Municipalidad Distrital de San Jerónimo<span class="hidden lg:block">Plataforma institucional de información</span></p>
-<div class="orbital" aria-hidden="true">
-</div>
+<x-illustration class="pointer-events-none absolute -right-12 -bottom-4 hidden w-80 opacity-25 lg:block" />
 </aside>
 <main id="contenido" class="flex flex-col justify-between px-6 py-8 sm:px-12 lg:px-16">
 <p class="text-right text-xs font-medium tracking-wide text-muted">ACCESO INSTITUCIONAL <span class="ml-2 inline-block size-1.5 rounded-full bg-emerald" aria-hidden="true">

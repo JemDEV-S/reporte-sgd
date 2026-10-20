@@ -1,6 +1,2 @@
-@props(['eyebrow' => 'ESPACIO DE TRABAJO', 'title', 'description' => null])
-<header class="mb-9 max-w-2xl">
-<p class="eyebrow text-emerald">{{ $eyebrow }}</p>
-<h1 class="mt-3 text-3xl font-medium tracking-tight sm:text-4xl">{{ $title }}</h1>
-@if ($description)<p class="mt-4 leading-7 text-muted">{{ $description }}</p>@endif
-</header>
+@props(['title', 'eyebrow' => null, 'description' => null, 'icon' => null])
+<header class="mb-4"><h1 class="text-xl font-semibold tracking-tight sm:text-2xl">{{ $title }}</h1></header>

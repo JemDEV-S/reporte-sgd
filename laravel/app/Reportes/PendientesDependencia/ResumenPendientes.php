@@ -3,6 +3,7 @@
 namespace App\Reportes\PendientesDependencia;
 
 use App\Models\Publicacion;
+use Illuminate\Support\Str;
 
 /**
  * Resultado del resumen jerárquico. Expone utilidades de navegación para el
@@ -23,6 +24,19 @@ class ResumenPendientes
     public function fila(string $codigo): ?FilaPendientes
     {
         return $this->filas[$codigo] ?? null;
+    }
+
+    /** Busca en todo el catálogo autorizado; no altera el foco ni sus totales. */
+    public function buscar(?string $texto): array
+    {
+        if ($texto === null || trim($texto) === '') {
+            return $this->ordenar($this->filas);
+        }
+
+        $aguja = Str::lower(Str::ascii(trim($texto)));
+
+        return $this->ordenar(array_filter($this->filas, fn (FilaPendientes $fila) => str_contains(Str::lower(Str::ascii($fila->codigo.' '.$fila->nombre)), $aguja)
+        ));
     }
 
     /**

@@ -55,13 +55,29 @@ class MotorPendientesDependencia
      */
     public function consultaBase(): Builder
     {
+        return $this->consultaPublicaciones([$this->publicacion->id]);
+    }
+
+    /** Las mismas reglas para el corte visible y la serie histórica. */
+    private function consultaPublicaciones(array $ids): Builder
+    {
         $query = DestinoCaptura::query()
-            ->where('destinos_captura.publicacion_id', $this->publicacion->id)
+            ->whereIn('destinos_captura.publicacion_id', $ids)
             ->where('destinos_captura.tipo_destino', '01')
             ->where('destinos_captura.activo', true)
             ->whereIn('destinos_captura.estado_recepcion', EstadoRecepcion::pendientes());
 
         return $this->filtros->aplicar($query);
+    }
+
+    /** Una agregación SQL para todos los cortes, sin cargar destinos en memoria. */
+    public function conteosHistoricos(array $publicaciones, array $dependencias): Collection
+    {
+        return $this->consultaPublicaciones($publicaciones)
+            ->whereIn('dependencia_codigo', $dependencias)
+            ->selectRaw('publicacion_id, count(*) as total')
+            ->groupBy('publicacion_id')
+            ->pluck('total', 'publicacion_id');
     }
 
     /**

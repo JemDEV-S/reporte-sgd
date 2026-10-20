@@ -5,7 +5,10 @@
         'prioridad' => $filtros->prioridad,
         'estado' => $filtros->estadoRecepcion,
         'bandeja' => $filtros->bandeja,
-    ]);
+        'buscar' => $busqueda,
+        'publicacion' => $resumen->publicacion->id,
+        'periodo' => request()->query('periodo'),
+    ], fn ($valor) => $valor !== null && $valor !== '');
     $exportarCsv = route('reportes.pendientes-dependencia.general.exportar', $filtrosQuery);
     $exportarXlsx = route('reportes.pendientes-dependencia.general.exportar', [...$filtrosQuery, 'formato' => 'xlsx']);
 
@@ -18,19 +21,21 @@
 @endphp
 
 <x-layouts.platform :areas="$areas" :area="$area">
-    <x-page-header eyebrow="CATÁLOGO DE REPORTES · GENERAL"
+    <x-page-header icon="reportes" eyebrow="CATÁLOGO DE REPORTES · GENERAL"
         title="Pendientes por dependencia — general"
-        description="Una fila por dependencia, sin jerarquía, con las cifras propias de cada oficina. Pensado para exportar toda la data a Excel." />
+        description="Consulta las cifras propias de cada oficina, busca una dependencia y exporta los resultados a Excel." />
 
     {{-- Migas de pan --}}
-    <nav aria-label="Ruta" class="mb-6 flex flex-wrap items-center gap-2 text-sm">
-        <a href="{{ route('reportes.pendientes-dependencia') }}" class="text-emerald hover:underline">Resumen jerárquico</a>
+    <nav aria-label="Ruta" class="mb-3 flex flex-wrap items-center gap-2 text-sm">
+        <a href="{{ route('reportes.pendientes-dependencia', array_diff_key($filtrosQuery, ['buscar' => null])) }}" class="text-emerald hover:underline">Resumen jerárquico</a>
         <span class="text-slate-300" aria-hidden="true">/</span>
-        <span class="font-semibold text-ink">General (todas las dependencias)</span>
+        <span class="font-semibold text-ink">{{ $busqueda === null ? 'General (todas las dependencias)' : 'General · resultados de búsqueda' }}</span>
     </nav>
 
+    <x-buscar-dependencia :publicacion="$resumen->publicacion->id" :busqueda="$busqueda" :filtros="$filtros" />
+
     {{-- Barra de contexto y exportación --}}
-    <div class="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-white px-6 py-5">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-white px-4 py-3">
         <div class="flex flex-wrap items-baseline gap-x-8 gap-y-1">
             <div>
                 <p class="text-xs text-muted">Dependencias</p>
@@ -46,9 +51,7 @@
                 <a href="{{ $exportarXlsx }}"
                    class="inline-flex items-center gap-2 rounded-lg bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald/90"
                    title="Descargar todas las dependencias en un archivo Excel (.xlsx)">
-                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-                        <path d="M10 3v9m0 0 3-3m-3 3-3-3M4 15h12" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
+                    <x-icon name="download" class="size-4" />
                     Exportar Excel
                 </a>
                 <a href="{{ $exportarCsv }}"
@@ -61,22 +64,22 @@
     </div>
 
     {{-- Tabla plana: todas las dependencias --}}
-    <section aria-label="Dependencias" class="rounded-2xl border border-line bg-white">
-        <div class="overflow-x-auto">
+    <section aria-label="Dependencias" class="rounded-xl border border-line bg-white" data-dynamic-table>
+        <div class="table-scroll overflow-x-auto">
             <table class="w-full min-w-[920px] text-sm">
                 <thead>
-                    <tr class="border-b border-line text-left text-[11px] uppercase tracking-wide text-muted">
-                        <th scope="col" class="px-6 py-3 font-semibold">Dependencia</th>
-                        <th scope="col" class="px-3 py-3 text-right font-semibold">Entrada<br><span class="font-normal normal-case">no leídos</span></th>
-                        <th scope="col" class="px-3 py-3 text-right font-semibold">Entrada<br><span class="font-normal normal-case">recibidos</span></th>
-                        <th scope="col" class="px-3 py-3 text-right font-semibold">Delegados<br><span class="font-normal normal-case">no leídos</span></th>
-                        <th scope="col" class="px-3 py-3 text-right font-semibold">Delegados<br><span class="font-normal normal-case">recibidos</span></th>
-                        <th scope="col" class="px-4 py-3 text-right font-semibold">Total</th>
-                        <th scope="col" class="px-4 py-3 text-right font-semibold">Prioridades <span class="font-normal normal-case">(N · U · MU)</span></th>
+                    <tr class="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
+                        <th data-sort-type="text" scope="col" class="px-6 py-3 font-semibold">Dependencia</th>
+                        <th data-sort-type="number" scope="col" class="px-3 py-3 text-right font-semibold">Entrada<br><span class="font-normal normal-case">no leídos</span></th>
+                        <th data-sort-type="number" scope="col" class="px-3 py-3 text-right font-semibold">Entrada<br><span class="font-normal normal-case">recibidos</span></th>
+                        <th data-sort-type="number" scope="col" class="px-3 py-3 text-right font-semibold">Delegados<br><span class="font-normal normal-case">no leídos</span></th>
+                        <th data-sort-type="number" scope="col" class="px-3 py-3 text-right font-semibold">Delegados<br><span class="font-normal normal-case">recibidos</span></th>
+                        <th data-sort-type="number" scope="col" class="px-4 py-3 text-right font-semibold">Total</th>
+                        <th data-sort-type="none" scope="col" class="px-4 py-3 text-right font-semibold">Prioridades <span class="font-normal normal-case">(N · U · MU)</span></th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($dependencias as $fila)
+                    @forelse ($dependencias as $fila)
                         <tr class="border-b border-line/70 last:border-0 hover:bg-paper/60 {{ $fila->total() === 0 ? 'text-muted' : '' }}">
                             <th scope="row" class="px-6 py-3 text-left font-normal">
                                 <a href="{{ route('reportes.pendientes-dependencia.detalle', ['dependencia' => $fila->codigo, ...$filtrosQuery]) }}"
@@ -104,11 +107,13 @@
                                 </span>
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr><td colspan="7" class="px-6 py-10 text-center text-muted">No hay dependencias que coincidan con la búsqueda.</td></tr>
+                    @endforelse
                 </tbody>
                 <tfoot>
                     <tr class="border-t-2 border-line bg-paper/40 font-semibold text-ink">
-                        <th scope="row" class="px-6 py-3 text-left">Total institucional</th>
+                        <th scope="row" class="px-6 py-3 text-left">{{ $busqueda === null ? 'Total institucional' : 'Total de resultados' }}</th>
                         <td class="px-3 py-3 text-right tabular-nums">{{ number_format($totales->entradaNoLeidos) }}</td>
                         <td class="px-3 py-3 text-right tabular-nums">{{ number_format($totales->entradaRecibidos) }}</td>
                         <td class="px-3 py-3 text-right tabular-nums">{{ number_format($totales->delegadosNoLeidos) }}</td>

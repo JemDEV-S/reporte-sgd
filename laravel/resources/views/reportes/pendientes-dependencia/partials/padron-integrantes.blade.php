@@ -18,7 +18,7 @@
         'prioridad' => $padron->filtros->prioridad,
         'estado' => $padron->filtros->estadoRecepcion,
         'bandeja' => $padron->filtros->bandeja,
-        'publicacion' => request()->query('publicacion'),
+        'publicacion' => $padron->publicacion->id,
     ], fn ($v) => $v !== null);
 
     $rutaPersona = fn (IntegrantePadron $i, array $extra = []) => route(
@@ -64,7 +64,7 @@
         <table class="w-full min-w-[640px] text-sm">
             <caption class="sr-only">Integrantes activos de la dependencia {{ $padron->codigo }}</caption>
             <thead>
-                <tr class="border-b border-line bg-paper/60 text-left text-[11px] uppercase tracking-wide text-muted">
+                <tr class="border-b border-line bg-paper/60 text-left text-xs uppercase tracking-wide text-muted">
                     <th scope="col" class="px-4 py-3 font-semibold">Integrante</th>
                     <th scope="col" class="px-4 py-3 text-right font-semibold">Total</th>
                     <th scope="col" class="px-4 py-3 text-right font-semibold">No leídos</th>
@@ -80,12 +80,12 @@
                         <td class="px-4 py-3">
                             <span class="font-medium text-ink">{{ $integrante->nombre ?? 'Sin nombre registrado' }}</span>
                             @if ($integrante->esEncargado)
-                                <span class="ml-1 rounded-full bg-emerald/10 px-2 py-0.5 text-[10px] font-semibold text-emerald">Encargado</span>
+                                <span class="ml-1 rounded-full bg-emerald/10 px-2 py-0.5 text-xs font-semibold text-emerald">Encargado</span>
                             @endif
-                            <p class="mt-0.5 flex flex-wrap items-center gap-1 font-mono text-[11px] text-muted">
+                            <p class="mt-0.5 flex flex-wrap items-center gap-1 font-mono text-xs text-muted">
                                 <span>{{ $integrante->codigo }}</span>
                                 @foreach ($integrante->vias as $via)
-                                    <span class="rounded bg-slate-100 px-1 py-0.5 text-[10px] font-normal not-italic text-muted">{{ $via }}</span>
+                                    <span class="rounded bg-slate-100 px-1 py-0.5 text-xs font-normal not-italic text-muted">{{ $via }}</span>
                                 @endforeach
                             </p>
                         </td>
@@ -128,7 +128,7 @@
                 <table class="w-full min-w-[640px] text-sm">
                     <caption class="sr-only">Otras asignaciones pendientes de la dependencia {{ $padron->codigo }}</caption>
                     <thead>
-                        <tr class="border-b border-line bg-paper/60 text-left text-[11px] uppercase tracking-wide text-muted">
+                        <tr class="border-b border-line bg-paper/60 text-left text-xs uppercase tracking-wide text-muted">
                             <th scope="col" class="px-4 py-3 font-semibold">Destinatario</th>
                             <th scope="col" class="px-4 py-3 font-semibold">Motivo</th>
                             <th scope="col" class="px-4 py-3 text-right font-semibold">Total</th>
@@ -145,7 +145,7 @@
                                         <span class="italic text-muted">Sin destinatario identificado</span>
                                     @else
                                         <span class="text-ink">{{ $otra->nombre ?? 'Sin nombre registrado' }}</span>
-                                        <p class="mt-0.5 font-mono text-[11px] text-muted">{{ $otra->codigo }}</p>
+                                        <p class="mt-0.5 font-mono text-xs text-muted">{{ $otra->codigo }}</p>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3 text-xs text-muted">{{ $otra->motivo() }}</td>

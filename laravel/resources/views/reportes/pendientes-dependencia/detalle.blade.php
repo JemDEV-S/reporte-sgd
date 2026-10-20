@@ -6,7 +6,9 @@
         'prioridad' => $filtros->prioridad,
         'estado' => $filtros->estadoRecepcion,
         'bandeja' => $filtros->bandeja,
-    ]);
+        'publicacion' => $detalle->publicacion->id,
+        'periodo' => request()->query('periodo'),
+    ], fn ($valor) => $valor !== null && $valor !== '');
     $volver = route('reportes.pendientes-dependencia', ['dependencia' => $detalle->codigo, ...$filtrosQuery]);
     $exportarCsv = route('reportes.pendientes-dependencia.exportar', ['dependencia' => $detalle->codigo, ...$filtrosQuery]);
 
@@ -23,12 +25,12 @@
 @endphp
 
 <x-layouts.platform :areas="$areas" :area="$area">
-    <x-page-header eyebrow="CATÁLOGO DE REPORTES · DETALLE" :title="$detalle->nombre()"
+    <x-page-header icon="reportes" eyebrow="CATÁLOGO DE REPORTES · DETALLE" :title="$detalle->nombre()"
         :description="'Destinos pendientes de la dependencia ' . $detalle->codigo . ', con sus claves, estado, prioridad y antigüedad.'" />
 
     {{-- Migas de pan --}}
-    <nav aria-label="Ruta" class="mb-6 flex flex-wrap items-center gap-2 text-sm">
-        <a href="{{ route('reportes.pendientes-dependencia') }}" class="text-emerald hover:underline">Institución</a>
+    <nav aria-label="Ruta" class="mb-3 flex flex-wrap items-center gap-2 text-sm">
+        <a href="{{ route('reportes.pendientes-dependencia', $filtrosQuery) }}" class="text-emerald hover:underline">Institución</a>
         <span class="text-slate-300" aria-hidden="true">/</span>
         <a href="{{ $volver }}" class="text-emerald hover:underline">Resumen de la dependencia</a>
         <span class="text-slate-300" aria-hidden="true">/</span>
@@ -36,7 +38,7 @@
     </nav>
 
     {{-- Cabecera compacta: total y filtros activos (sin repetir los KPIs del resumen) --}}
-    <div class="mb-8 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-white px-6 py-5">
+    <div class="mb-4 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-line bg-white px-4 py-3">
         <div>
             <p class="text-xs text-muted">{{ $detalle->codigo }} · Destinos pendientes</p>
             <p class="text-3xl font-light tabular-nums text-ink">{{ number_format($detalle->totalDestinos()) }}</p>
@@ -48,7 +50,7 @@
                 @endforeach
             </div>
         @endif
-        <div class="flex items-center gap-4">
+        <div class="flex flex-wrap items-center gap-3">
             @if ($contexto->puedeVerPersonales)
                 @php($integrantesUrl = route('reportes.pendientes-dependencia.integrantes', ['dependencia' => $detalle->codigo, ...$filtrosQuery]))
                 <a href="{{ $integrantesUrl }}"
@@ -57,9 +59,7 @@
                    data-dependencia-nombre="{{ $detalle->nombre() }}"
                    class="inline-flex items-center gap-2 rounded-lg border border-emerald/40 bg-emerald/5 px-3 py-2 text-sm font-semibold text-emerald hover:bg-emerald/10"
                    title="Ver el padrón de integrantes activos y sus pendientes">
-                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-                        <path d="M7 9a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm9 8c0-2.5-2-4.5-4.5-4.5h-4C5 12.5 3 14.5 3 17m14-1c0-2-1.3-3.6-3-4" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
+                    <x-icon name="users" class="size-4" />
                     Ver integrantes
                 </a>
             @endif
@@ -67,9 +67,7 @@
                 <a href="{{ $exportarCsv }}"
                    class="inline-flex items-center gap-2 rounded-lg border border-emerald/40 bg-emerald/5 px-3 py-2 text-sm font-semibold text-emerald hover:bg-emerald/10"
                    title="Descargar los mismos destinos de esta vista, con los filtros aplicados">
-                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-                        <path d="M10 3v9m0 0 3-3m-3 3-3-3M4 15h12" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
+                    <x-icon name="download" class="size-4" />
                     Exportar CSV
                 </a>
             @endcan
@@ -77,17 +75,20 @@
         </div>
     </div>
 
+    <div class="mb-4 grid items-start gap-3 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+    <x-evolucion-pendientes :publicacion="$detalle->publicacion->id" :puntos="$evolucion" :dias="$dias" />
+
     {{-- Gráfico de antigüedad (lo que el resumen no muestra) --}}
-    <section aria-label="Antigüedad" class="mb-8 rounded-2xl border border-line bg-white p-6">
+    <section aria-label="Antigüedad" class="rounded-xl border border-line bg-white p-4">
         <div class="mb-1 flex items-baseline justify-between">
             <h2 class="text-sm font-semibold text-ink">Antigüedad de los pendientes</h2>
             <span class="text-xs text-muted">Corte: {{ $detalle->fechaCorte->translatedFormat('d \d\e F \d\e Y') }}</span>
         </div>
-        <p class="mb-5 text-xs text-muted">Días desde la recepción, o desde la emisión cuando aún no hay recepción.</p>
-        <div class="space-y-3">
+        <p class="mb-3 text-xs text-muted">Días desde la recepción, o desde la emisión cuando aún no hay recepción.</p>
+        <div class="space-y-1">
             @foreach (TramoAntiguedad::ordenados() as $tramo)
                 @php($n = $detalle->distribucionAntiguedad[$tramo->value] ?? 0)
-                <div class="flex items-center gap-4">
+                <div class="flex flex-wrap items-center gap-3">
                     <span class="w-32 shrink-0 text-xs text-muted">{{ $tramo->etiqueta() }}</span>
                     <div class="flex h-6 flex-1 items-center">
                         <div class="h-2.5 rounded-full {{ $colorTramo[$tramo->value] }}"
@@ -99,6 +100,8 @@
             @endforeach
         </div>
     </section>
+
+    </div>
 
     {{-- Tabla de asignaciones pendientes con identificación documental legible --}}
     <section aria-label="Asignaciones pendientes" class="rounded-2xl border border-line bg-white">
@@ -142,7 +145,7 @@
                     </svg>
                 </button>
             </div>
-            <div class="max-h-[75vh] overflow-y-auto px-6 py-5">
+            <div class="max-h-[75vh] overflow-y-auto px-4 py-3">
                 <p data-modal-estado role="status" aria-live="polite" class="sr-only"></p>
                 <div data-modal-cuerpo></div>
             </div>

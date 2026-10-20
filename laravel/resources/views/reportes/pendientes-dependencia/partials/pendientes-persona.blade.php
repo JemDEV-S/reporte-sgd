@@ -27,7 +27,7 @@
         'prioridad' => $detalle->filtros->prioridad,
         'estado' => $detalle->filtros->estadoRecepcion,
         'bandeja' => $detalle->filtros->bandeja,
-        'publicacion' => request()->query('publicacion'),
+        'publicacion' => $detalle->publicacion->id,
     ], fn ($v) => $v !== null);
     $volver = route('reportes.pendientes-dependencia.integrantes', ['dependencia' => $detalle->codigo, ...$filtrosQuery]);
 @endphp

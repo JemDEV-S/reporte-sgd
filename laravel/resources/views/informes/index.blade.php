@@ -3,7 +3,7 @@
 @endphp
 
 <x-layouts.platform :areas="$areas" :area="$area">
-    <x-page-header eyebrow="INFORMES INTELIGENTES · BETA" title="Informes inteligentes"
+    <x-page-header icon="informes" eyebrow="INFORMES INTELIGENTES · BETA" title="Informes inteligentes"
         description="Informes situacionales de pendientes redactados a partir de agregados verificados del motor. Nacen como borrador y requieren aprobación humana." />
 
     @if (session('estado'))
@@ -19,36 +19,36 @@
         </section>
     @elseif ($puedeGenerar)
         <section class="mb-10 rounded-2xl border border-line bg-white p-6">
-            <h2 class="text-sm font-semibold text-ink">Generar informe de la publicación vigente</h2>
+            <h2 class="section-heading"><span class="icon-tile"><x-icon name="informes" /></span>Generar informe de la publicación vigente</h2>
             <p class="mt-1 text-xs text-muted">
                 Publicación #{{ $publicacion->id }} ·
                 {{ Carbon::parse($publicacion->fecha_publicacion)->translatedFormat('d \d\e F \d\e Y, H:i') }}.
                 Las cifras se toman del motor; tú completas el encabezado del memorando.
             </p>
-            <form method="POST" action="{{ route('informes.generar') }}" class="mt-5 grid gap-4 sm:grid-cols-2">
+            <form method="POST" action="{{ route('informes.generar') }}" class="mt-5 grid max-w-5xl gap-4 sm:grid-cols-2">
                 @csrf
                 <div class="sm:col-span-2">
-                    <label for="numero" class="mb-1 block text-[11px] font-semibold text-muted">Número de informe</label>
+                    <label for="numero" class="mb-1 block text-xs font-semibold text-muted">Número de informe</label>
                     <input id="numero" name="numero" maxlength="120" placeholder="N° 000135-2026-MDSJ/OTI" class="field">
                 </div>
                 <div>
-                    <label for="destinatario" class="mb-1 block text-[11px] font-semibold text-muted">A (destinatario)</label>
+                    <label for="destinatario" class="mb-1 block text-xs font-semibold text-muted">A (destinatario)</label>
                     <input id="destinatario" name="destinatario" maxlength="160" placeholder="Nombre del destinatario" class="field">
                 </div>
                 <div>
-                    <label for="destinatario_cargo" class="mb-1 block text-[11px] font-semibold text-muted">Cargo del destinatario</label>
+                    <label for="destinatario_cargo" class="mb-1 block text-xs font-semibold text-muted">Cargo del destinatario</label>
                     <input id="destinatario_cargo" name="destinatario_cargo" maxlength="160" placeholder="Gerente Municipal" class="field">
                 </div>
                 <div>
-                    <label for="remitente" class="mb-1 block text-[11px] font-semibold text-muted">DE (remitente)</label>
+                    <label for="remitente" class="mb-1 block text-xs font-semibold text-muted">DE (remitente)</label>
                     <input id="remitente" name="remitente" maxlength="160" placeholder="Nombre del remitente" class="field">
                 </div>
                 <div>
-                    <label for="remitente_cargo" class="mb-1 block text-[11px] font-semibold text-muted">Cargo del remitente</label>
+                    <label for="remitente_cargo" class="mb-1 block text-xs font-semibold text-muted">Cargo del remitente</label>
                     <input id="remitente_cargo" name="remitente_cargo" maxlength="160" placeholder="Director OTI" class="field">
                 </div>
                 <div class="sm:col-span-2">
-                    <label for="asunto" class="mb-1 block text-[11px] font-semibold text-muted">Asunto</label>
+                    <label for="asunto" class="mb-1 block text-xs font-semibold text-muted">Asunto</label>
                     <input id="asunto" name="asunto" maxlength="300"
                         placeholder="Reporte situacional de documentos pendientes en el SGD" class="field">
                 </div>
@@ -81,7 +81,7 @@
                                 @if ($informe->autor) por {{ $informe->autor->nombre_completo }} @endif
                             </p>
                         </div>
-                        <span class="rounded-full px-3 py-1 text-[11px] font-semibold {{ $informe->esAprobado() ? 'bg-emerald/10 text-emerald' : 'bg-amber-100 text-amber-700' }}">
+                        <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $informe->esAprobado() ? 'bg-emerald/10 text-emerald' : 'bg-amber-100 text-amber-700' }}">
                             {{ $informe->esAprobado() ? 'Aprobado' : 'Borrador' }}
                         </span>
                     </li>

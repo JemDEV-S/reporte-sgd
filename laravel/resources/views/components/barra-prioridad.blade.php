@@ -1,4 +1,5 @@
 @props([
+    'leyenda' => true,
     'normal' => 0,
     'urgente' => 0,
     'muyUrgente' => 0,
@@ -23,7 +24,8 @@
             @endif
         @endforeach
     </div>
-    <ul class="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted">
+    @if ($leyenda)
+    <ul class="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted">
         @foreach ($segmentos as $s)
             <li class="inline-flex items-center gap-1.5">
                 <span class="{{ $s['clase'] }} inline-block h-2.5 w-2.5 rounded-sm" aria-hidden="true"></span>
@@ -32,4 +34,5 @@
             </li>
         @endforeach
     </ul>
+    @endif
 </div>

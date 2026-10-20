@@ -10,7 +10,7 @@
 @endphp
 
 <x-layouts.platform :areas="$areas" :area="$area">
-    <x-page-header eyebrow="INFORMES INTELIGENTES · BETA" :title="$informe->numero ?: 'Informe de pendientes'"
+    <x-page-header icon="informes" eyebrow="INFORMES INTELIGENTES · BETA" :title="$informe->numero ?: 'Informe de pendientes'"
         :description="'Alcance: ' . $informe->alcance() . '. Las cifras provienen de agregados verificados del motor; requiere revisión humana.'" />
 
     @if (session('estado'))
@@ -33,9 +33,7 @@
         <div class="flex items-center gap-3">
             <a href="{{ route('informes.descargar', $informe) }}"
                class="inline-flex items-center gap-2 rounded-lg bg-emerald px-4 py-2 text-sm font-semibold text-white hover:bg-emerald/90">
-                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-                    <path d="M10 3v9m0 0 3-3m-3 3-3-3M4 15h12" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
+                <x-icon name="download" class="size-4" />
                 Descargar Word
             </a>
             @if (! $informe->esAprobado() && $puedeAprobar)
@@ -107,7 +105,7 @@
                         <thead>
                             {{-- Cabecera agrupada: ENTRADA y DELEGADOS, cada una con No leído / Recibidos sin atender.
                                  El Total va tras los grupos, antes de Urgentes. --}}
-                            <tr class="text-[11px] uppercase tracking-wide text-muted">
+                            <tr class="text-xs uppercase tracking-wide text-muted">
                                 <th rowspan="2" class="border-b border-line px-3 py-2 text-left align-bottom">#</th>
                                 <th rowspan="2" class="border-b border-line px-3 py-2 text-left align-bottom">Unidad orgánica</th>
                                 <th colspan="2" class="border-b border-l border-line px-3 py-1 text-center">Entrada</th>
@@ -115,7 +113,7 @@
                                 <th rowspan="2" class="border-b border-l border-line px-3 py-2 text-right align-bottom">Total</th>
                                 <th rowspan="2" class="border-b border-l border-line px-3 py-2 text-right align-bottom">Urgentes</th>
                             </tr>
-                            <tr class="text-[10px] uppercase tracking-wide text-muted">
+                            <tr class="text-xs uppercase tracking-wide text-muted">
                                 <th class="border-b border-l border-line px-3 py-1 text-right font-normal">No leído</th>
                                 <th class="border-b border-line px-3 py-1 text-right font-normal">Recibidos sin atender</th>
                                 <th class="border-b border-l border-line px-3 py-1 text-right font-normal">No leído</th>

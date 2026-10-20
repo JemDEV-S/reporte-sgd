@@ -6,13 +6,13 @@
 @source '../**/*.js';
 
 @theme {
-    --color-ink: #102438;
-    --color-emerald: #087f70;
-    --color-mint: #68d6bc;
-    --color-paper: #f5f7f9;
-    --color-muted: #5d6c7b;
-    --color-line: #dfe6eb;
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --color-ink: #1e293b;
+    --color-emerald: #08776b;
+    --color-mint: #91e4ce;
+    --color-paper: #f5f7fa;
+    --color-muted: #526477;
+    --color-line: #e2e8f0;
+    --font-sans: 'Segoe UI', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
@@ -23,15 +23,59 @@
 
 @layer components {
     .eyebrow { @apply text-[10px] font-bold tracking-[.2em]; }
-    .btn { @apply inline-flex min-h-11 items-center justify-center gap-3 rounded-lg px-5 py-3 text-sm font-semibold transition-colors; }
+    .btn { @apply inline-flex min-h-11 items-center justify-center gap-3 rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors; }
     .btn-primary { @apply bg-emerald text-white hover:bg-ink; }
     .btn-secondary { @apply border border-line bg-white text-ink hover:bg-paper; }
     .btn-quiet { @apply px-2 py-2 text-xs text-muted hover:bg-paper hover:text-ink; }
-    .field { @apply min-h-12 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-emerald aria-invalid:border-red-600; }
-    .nav-link { @apply flex min-h-11 items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-300 hover:bg-white/5 hover:text-white aria-[current=page]:bg-white/10 aria-[current=page]:text-mint; }
-    .area-card { @apply flex flex-col rounded-2xl border border-line bg-white p-7 transition-colors hover:border-emerald/40; }
+    .field { @apply min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-ink placeholder:text-slate-400 focus:border-emerald aria-invalid:border-red-600; }
+    .nav-link { @apply flex min-h-11 items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-slate-300 hover:bg-white/5 hover:text-white aria-[current=page]:bg-mint/10 aria-[current=page]:text-mint; }
+    .area-card { @apply flex flex-col rounded-2xl border border-line bg-white p-6 shadow-sm transition-colors hover:border-emerald/40; }
     .status-label { @apply inline-flex rounded-full border border-emerald/15 bg-emerald/5 px-3 py-1 text-[10px] font-semibold text-emerald; }
     .skip-link { @apply sr-only fixed top-3 left-3 z-50 rounded-lg bg-white p-3 text-ink focus:not-sr-only focus:fixed; }
 }
 
-.orbital { position: absolute; width: 660px; height: 660px; right: -390px; bottom: -330px; border: 1px solid rgb(104 214 188 / .15); border-radius: 50%; box-shadow: 0 0 0 65px rgb(104 214 188 / .035), 0 0 0 130px rgb(104 214 188 / .025); pointer-events: none; }
+
+@layer base {
+    body { font-size: .9375rem; line-height: 1.6; }
+    input, select, textarea { accent-color: var(--color-emerald); }
+    input[type='checkbox'] { min-width: 1rem; min-height: 1rem; }
+    ::selection { background: #d0f1e8; color: #153f3b; }
+    dialog { max-height: 90dvh; overflow-y: auto; }
+}
+@layer components {
+    .icon-tile { @apply inline-flex size-11 shrink-0 items-center justify-center rounded-xl border border-emerald/10 bg-emerald/5 text-emerald; }
+    .panel { @apply rounded-2xl border border-line bg-white p-5 shadow-sm sm:p-6; }
+    .section-heading { @apply flex items-center gap-2 text-sm font-semibold text-ink; }
+    .workspace { @apply min-w-0 px-4 py-4 sm:px-6 lg:px-8 lg:py-5 2xl:px-10; }
+    .workspace section, .workspace form, .workspace aside { min-width: 0; }
+    .workspace table thead { @apply bg-slate-50/80; }
+    .workspace table th { line-height: 1.5; }
+    .workspace table tbody tr { transition: background-color 120ms ease; }
+    .workspace table tbody tr:hover { background-color: #f0f8f6; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+}
+@media print {
+    .platform-sidebar, .platform-topbar, .skip-link, [data-chart-controls] { display: none !important; }
+    .platform-shell { display: block !important; }
+    .workspace { padding: 0; }
+    body { background: white; }
+}
+
+@layer components {
+    .field-compact { @apply min-h-8 py-1 text-xs; }
+    .btn-compact { @apply min-h-8 px-3 py-1 text-xs; }
+    .report-toolbar { @apply grid grid-cols-2 items-center gap-2 xl:grid-cols-[minmax(180px,2fr)_minmax(130px,1fr)_minmax(150px,1fr)_minmax(140px,1fr)_auto]; }
+    .report-toolbar .field { @apply min-h-10 py-2; }
+    .report-toolbar .btn { @apply min-h-10 px-3 py-2; }
+    .table-scroll { max-height: 28rem; }
+    .table-scroll thead { position: sticky; top: 0; z-index: 1; background: #f8fafc; }
+    .table-tools { @apply flex flex-wrap items-center gap-2 border-b border-line px-4 py-2; }
+    .table-tools input { @apply min-h-9 min-w-40 flex-1 rounded-lg border border-line px-3 py-1.5 text-sm; }
+    .table-tools select { @apply min-h-9 rounded-lg border border-line px-2 py-1 text-xs; }
+    .table-pager { @apply flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-2 text-xs text-muted; }
+    .table-pager button { @apply min-h-9 rounded-lg border border-line px-3 py-1 font-medium text-ink disabled:cursor-default disabled:opacity-40; }
+    .sort-button { @apply inline-flex min-h-8 items-center gap-1 text-inherit; }
+    [data-dynamic-table] tr[hidden] { display: none; }
+}

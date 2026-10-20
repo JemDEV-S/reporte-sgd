@@ -17,6 +17,7 @@ class ExportacionGeneral
 {
     public function __construct(
         private readonly ResumenPendientes $resumen,
+        private readonly ?string $busqueda = null,
     ) {}
 
     /**
@@ -81,7 +82,7 @@ class ExportacionGeneral
 
         return [
             '',
-            'TOTAL INSTITUCIONAL',
+            $this->busqueda === null ? 'TOTAL INSTITUCIONAL' : 'TOTAL DE RESULTADOS',
             '',
             $t->entradaNoLeidos,
             $t->entradaRecibidos,
@@ -104,7 +105,7 @@ class ExportacionGeneral
         $publicacion = $this->resumen->publicacion;
 
         $lineas = [
-            ['Reporte', 'Pendientes por dependencia — general (todas las dependencias)'],
+            ['Reporte', $this->busqueda === null ? 'Pendientes por dependencia — general (todas las dependencias)' : 'Pendientes por dependencia — resultados de búsqueda'],
             ['Alcance', 'Cifras propias de cada dependencia, sin jerarquía'],
             ['Unidad', 'Asignaciones (destinos internos, tipo 01)'],
             ['Dependencias', (string) count($this->dependenciasOrdenadas())],
@@ -115,6 +116,9 @@ class ExportacionGeneral
         ];
 
         $descripcion = $this->resumen->filtros->descripcion();
+        if ($this->busqueda !== null) {
+            $descripcion['Búsqueda de dependencia'] = $this->busqueda;
+        }
         $lineas[] = ['Filtros', $descripcion === [] ? 'Sin filtros' : implode(' · ', array_map(
             fn ($campo, $valor) => "{$campo}: {$valor}",
             array_keys($descripcion),

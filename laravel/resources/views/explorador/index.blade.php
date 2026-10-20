@@ -9,22 +9,22 @@
 @endphp
 
 <x-layouts.platform :areas="$areas" :area="$area">
-    <x-page-header eyebrow="EXPLORADOR DE DATOS · BETA" title="Explorador de datos"
+    <x-page-header icon="explorador" eyebrow="EXPLORADOR DE DATOS · BETA" title="Explorador de datos"
         description="Agrupa y filtra los destinos pendientes de la publicación vigente. La medida es el conteo de asignaciones; las cifras comparten las reglas del reporte." />
 
     @if (session('estado'))
         <x-alert class="mb-6">{{ session('estado') }}</x-alert>
     @endif
 
-    <div class="grid gap-8 lg:grid-cols-[320px_1fr]">
+    <div class="grid gap-8 xl:grid-cols-[300px_minmax(0,1fr)]">
         {{-- Panel de configuración de la consulta --}}
         <aside class="space-y-6">
             <form method="GET" action="{{ route('explorador.index') }}" class="rounded-2xl border border-line bg-white p-5">
-                <h2 class="text-sm font-semibold text-ink">Consulta</h2>
+                <h2 class="section-heading"><span class="icon-tile"><x-icon name="filter" /></span>Configurar consulta</h2>
 
                 {{-- Agrupar por: dimensiones permitidas (lista cerrada) --}}
                 <fieldset class="mt-4">
-                    <legend class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">Agrupar por</legend>
+                    <legend class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Agrupar por</legend>
                     <div class="space-y-2">
                         @foreach ($campos as $campo)
                             @if ($campo->agrupable)
@@ -37,12 +37,12 @@
                             @endif
                         @endforeach
                     </div>
-                    <p class="mt-2 text-[11px] text-muted">Sin agrupaciones se muestra el total del universo filtrado.</p>
+                    <p class="mt-2 text-xs text-muted">Sin agrupaciones se muestra el total del universo filtrado.</p>
                 </fieldset>
 
                 {{-- Filtros de lista cerrada --}}
                 <fieldset class="mt-5">
-                    <legend class="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">Filtros</legend>
+                    <legend class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">Filtros</legend>
                     <div class="space-y-3">
                         @foreach ($campos as $campo)
                             @if ($campo->filtrable && $campo->opciones !== null)
@@ -69,7 +69,7 @@
 
                 {{-- Orden --}}
                 <div class="mt-5">
-                    <label for="orden" class="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-muted">Orden</label>
+                    <label for="orden" class="mb-1 block text-xs font-semibold uppercase tracking-wide text-muted">Orden</label>
                     <select id="orden" name="orden" class="field">
                         <option value="cantidad_desc" @selected($consulta->orden === 'cantidad_desc')>Mayor conteo primero</option>
                         <option value="cantidad_asc" @selected($consulta->orden === 'cantidad_asc')>Menor conteo primero</option>
@@ -95,7 +95,7 @@
                                 <a href="{{ route('explorador.cargar', $g) }}" class="truncate text-emerald hover:underline" title="{{ $g->nombre }}">
                                     {{ $g->nombre }}
                                 </a>
-                                <span class="shrink-0 text-[10px] text-muted">
+                                <span class="shrink-0 text-xs text-muted">
                                     {{ $g->esInstitucional() ? 'Institucional' : 'Privada' }}
                                 </span>
                             </li>
@@ -116,7 +116,7 @@
                 <form method="POST" action="{{ route('explorador.guardar', $params) }}" class="flex flex-wrap items-end gap-2">
                     @csrf
                     <div>
-                        <label for="nombre" class="mb-1 block text-[11px] font-semibold text-muted">Guardar esta consulta</label>
+                        <label for="nombre" class="mb-1 block text-xs font-semibold text-muted">Guardar esta consulta</label>
                         <input id="nombre" name="nombre" required maxlength="120" placeholder="Nombre de la consulta" class="field w-56">
                     </div>
                     <select name="visibilidad" class="field w-36" aria-label="Visibilidad">
@@ -141,7 +141,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full min-w-[480px] text-sm">
                         <thead>
-                            <tr class="border-b border-line text-left text-[11px] uppercase tracking-wide text-muted">
+                            <tr class="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
                                 @foreach ($resultado->columnas as $col)
                                     <th scope="col" class="px-6 py-3 font-semibold">{{ $col }}</th>
                                 @endforeach

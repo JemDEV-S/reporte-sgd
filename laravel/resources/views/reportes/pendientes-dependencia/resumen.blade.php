@@ -49,23 +49,25 @@
         'prioridad' => $filtros->prioridad,
         'estado' => $filtros->estadoRecepcion,
         'bandeja' => $filtros->bandeja,
+        'publicacion' => $resumen->publicacion->id,
+        'periodo' => request()->query('periodo'),
         'acumulado' => $acumulado ? '1' : null,
-    ]);
+    ], fn ($valor) => $valor !== null && $valor !== '');
     $enlace = fn (?string $codigo, array $extra = []) => route('reportes.pendientes-dependencia',
-        array_filter(['dependencia' => $codigo, ...$filtrosQuery, ...$extra]));
+        array_filter(['dependencia' => $codigo, ...$filtrosQuery, ...$extra], fn ($valor) => $valor !== null && $valor !== ''));
 
     // Enlaces para alternar el modo acumulado conservando el nodo y los filtros.
     $sinModo = array_diff_key($filtrosQuery, ['acumulado' => null]);
     $enlaceModo = fn (bool $acc) => route('reportes.pendientes-dependencia',
-        array_filter(['dependencia' => $foco?->codigo, ...$sinModo, 'acumulado' => $acc ? '1' : null]));
+        array_filter(['dependencia' => $foco?->codigo, ...$sinModo, 'acumulado' => $acc ? '1' : null], fn ($valor) => $valor !== null && $valor !== ''));
 @endphp
 
 <x-layouts.platform :areas="$areas" :area="$area">
-    <x-page-header eyebrow="CATÁLOGO DE REPORTES" title="Pendientes por dependencia"
+    <x-page-header icon="reportes" eyebrow="CATÁLOGO DE REPORTES" title="Pendientes por dependencia"
         description="Documentos no leídos y recibidos sin atender, en entrada y delegados, recorriendo la institución hasta el personal responsable." />
 
     {{-- Migas de pan del drill-down, con acceso al reporte general plano --}}
-    <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
         <nav aria-label="Ruta de dependencias" class="flex flex-wrap items-center gap-2 text-sm">
             <a href="{{ $enlace(null) }}"
                class="{{ $esInstitucional ? 'font-semibold text-ink' : 'text-emerald hover:underline' }}">Institución</a>
@@ -87,70 +89,25 @@
         </a>
     </div>
 
-    {{-- Filtros y modo de visualización --}}
-    @php($hayFiltros = $filtros->prioridad || $filtros->estadoRecepcion || $filtros->bandeja)
-    <form method="GET" action="{{ route('reportes.pendientes-dependencia') }}"
-          class="mb-8 rounded-2xl border border-line bg-white p-4 sm:p-5">
-        {{-- Conserva el nodo y el modo al aplicar filtros --}}
-        @if ($foco)<input type="hidden" name="dependencia" value="{{ $foco->codigo }}">@endif
-        @if ($acumulado)<input type="hidden" name="acumulado" value="1">@endif
-        <div class="flex flex-wrap items-end gap-4">
-            <div class="min-w-[9rem] flex-1">
-                <label for="f-bandeja" class="mb-1.5 block text-[11px] font-semibold text-muted">Bandeja</label>
-                <select id="f-bandeja" name="bandeja" class="field">
-                    <option value="">Todas</option>
-                    <option value="entrada" @selected($filtros->bandeja === 'entrada')>Entrada</option>
-                    <option value="delegados" @selected($filtros->bandeja === 'delegados')>Delegados</option>
-                </select>
-            </div>
-            <div class="min-w-[9rem] flex-1">
-                <label for="f-estado" class="mb-1.5 block text-[11px] font-semibold text-muted">Estado de recepción</label>
-                <select id="f-estado" name="estado" class="field">
-                    <option value="">Todos</option>
-                    <option value="0" @selected($filtros->estadoRecepcion === '0')>No leídos</option>
-                    <option value="1" @selected($filtros->estadoRecepcion === '1')>Recibidos sin atender</option>
-                </select>
-            </div>
-            <div class="min-w-[9rem] flex-1">
-                <label for="f-prioridad" class="mb-1.5 block text-[11px] font-semibold text-muted">Prioridad</label>
-                <select id="f-prioridad" name="prioridad" class="field">
-                    <option value="">Todas</option>
-                    <option value="1" @selected($filtros->prioridad === '1')>Normal</option>
-                    <option value="2" @selected($filtros->prioridad === '2')>Urgente</option>
-                    <option value="3" @selected($filtros->prioridad === '3')>Muy urgente</option>
-                </select>
-            </div>
-            <div class="flex items-center gap-2">
-                <x-button variant="primary">Aplicar</x-button>
-                @if ($hayFiltros)
-                    <a href="{{ $enlace($foco?->codigo, ['prioridad' => null, 'estado' => null, 'bandeja' => null]) }}"
-                       class="btn btn-quiet">Limpiar</a>
-                @endif
-            </div>
-        </div>
-    </form>
+    <x-buscar-dependencia :publicacion="$resumen->publicacion->id" :busqueda="$busqueda" :resultados="$resultados" :rutas="$rutasBusqueda" :mostrar-resultados="true" :filtros="$filtros" />
 
     {{-- Panel del nodo en foco --}}
-    <section aria-label="Resumen de {{ $tituloFoco }}" class="mb-10">
-        <div class="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <section aria-label="Resumen de {{ $tituloFoco }}" class="mb-4">
+        <div class="mb-3 flex flex-wrap items-end justify-between gap-2">
             <div>
-                <p class="eyebrow text-emerald">EN FOCO</p>
-                <h2 class="mt-2 text-xl font-medium">{{ $tituloFoco }}</h2>
+                <h2 class="text-sm font-semibold">{{ $tituloFoco }}</h2>
                 @unless ($esInstitucional)
                     <p class="mt-1 text-xs text-muted">
                         {{ $usarAcumulado ? 'Incluye las cifras de sus subdependencias.' : 'Solo las cifras propias de esta dependencia.' }}
                     </p>
                 @endunless
             </div>
-            <div class="text-right">
-                <p class="text-xs text-muted">Total de asignaciones pendientes</p>
-                <p class="text-3xl font-light tabular-nums text-ink">{{ number_format($totalFoco) }}</p>
-            </div>
+
         </div>
 
         {{-- Alternar modo de cifras y abrir el detalle de la dependencia --}}
         @unless ($esInstitucional)
-            <div class="mb-6 flex flex-wrap items-center gap-3">
+            <div class="mb-3 flex flex-wrap items-center gap-2">
                 <div class="inline-flex rounded-lg border border-line bg-white p-1 text-xs font-medium" role="group" aria-label="Modo de cifras">
                     <a href="{{ $enlaceModo(false) }}"
                        @if (! $usarAcumulado) aria-current="true" @endif
@@ -164,44 +121,61 @@
             </div>
         @endunless
 
-        <div class="grid gap-5 md:grid-cols-2">
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-[minmax(140px,.65fr)_1fr_1fr]">
+            <div class="col-span-2 rounded-xl border border-line bg-white p-4 md:col-span-1">
+                <p class="text-xs font-medium text-muted">Total de asignaciones pendientes</p>
+                <p class="mt-2 text-3xl font-semibold tracking-tight tabular-nums">{{ number_format($totalFoco) }}</p>
+                <p class="mt-2 text-xs text-muted">{{ $usarAcumulado ? 'Con subdependencias' : 'Cifras propias' }}</p>
+            </div>
             <x-kpi-pendientes titulo="Entrada" descripcion="Dirigidos al encargado de la dependencia."
                 :no-leidos="$entradaNoLeidos" :recibidos="$entradaRecibidos" />
             <x-kpi-pendientes titulo="Delegados" descripcion="Dirigidos a un empleado distinto del encargado."
                 :no-leidos="$delegadosNoLeidos" :recibidos="$delegadosRecibidos" />
         </div>
 
-        <div class="mt-5 rounded-2xl border border-line bg-white p-6">
-            <h3 class="mb-4 text-sm font-semibold text-ink">Distribución por prioridad</h3>
-            <x-barra-prioridad :normal="$pNormal" :urgente="$pUrgente" :muy-urgente="$pMuy" />
-        </div>
     </section>
+
+    <div class="mb-4 grid items-start gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(260px,1fr)]">
+        <x-evolucion-pendientes :publicacion="$resumen->publicacion->id" :puntos="$evolucion" :dias="$dias" :subdependencias="$usarAcumulado" />
+        <section class="h-full rounded-xl border border-line bg-white p-4" aria-label="Prioridades">
+            <h2 class="mb-4 text-sm font-semibold">Distribución por prioridad</h2>
+            <x-barra-prioridad :leyenda="false" :normal="$pNormal" :urgente="$pUrgente" :muy-urgente="$pMuy" />
+            <dl class="mt-3 divide-y divide-line text-sm">
+                @foreach ([['Normal', $pNormal, 'bg-blue-600'], ['Urgente', $pUrgente, 'bg-orange-500'], ['Muy urgente', $pMuy, 'bg-red-600']] as [$nombrePrioridad, $cantidadPrioridad, $colorPrioridad])
+                    <div class="flex items-center justify-between gap-3 py-3">
+                        <dt class="flex items-center gap-2 text-muted"><span class="size-2 rounded-full {{ $colorPrioridad }}" aria-hidden="true"></span>{{ $nombrePrioridad }}</dt>
+                        <dd class="flex items-center gap-3 tabular-nums"><span class="font-semibold">{{ number_format($cantidadPrioridad) }}</span><span class="w-12 text-right text-xs text-muted">{{ $totalFoco ? round($cantidadPrioridad / $totalFoco * 100) : 0 }}%</span></dd>
+                    </div>
+                @endforeach
+            </dl>
+        </section>
+    </div>
 
     {{-- Tabla navegable de dependencias hijas --}}
     @if (count($hijas) > 0)
-        <section aria-label="Dependencias" class="rounded-2xl border border-line bg-white">
-            <div class="flex items-center justify-between border-b border-line px-6 py-4">
+        <section aria-label="Dependencias" class="rounded-xl border border-line bg-white" data-dynamic-table>
+            <div class="flex items-center justify-between border-b border-line px-4 py-2.5">
                 <h2 class="text-sm font-semibold text-ink">
                     {{ $esInstitucional ? 'Dependencias principales' : 'Dependencias dentro de ' . $foco->nombre }}
                 </h2>
                 <span class="status-label">{{ $usarAcumulado ? 'Acumulado con descendencia' : 'Cifras propias' }}</span>
             </div>
-            <div class="overflow-x-auto">
+            <div class="table-scroll overflow-x-auto">
                 <table class="w-full min-w-[720px] text-sm">
                     <thead>
-                        <tr class="border-b border-line text-left text-[11px] uppercase tracking-wide text-muted">
-                            <th scope="col" class="px-6 py-3 font-semibold">Dependencia</th>
-                            <th scope="col" class="px-4 py-3 text-right font-semibold">Entrada</th>
-                            <th scope="col" class="px-4 py-3 text-right font-semibold">Delegados</th>
-                            <th scope="col" class="px-4 py-3 text-right font-semibold">Total</th>
-                            <th scope="col" class="px-6 py-3 font-semibold">Magnitud</th>
+                        <tr class="border-b border-line text-left text-xs uppercase tracking-wide text-muted">
+                            <th data-sort-type="text" scope="col" class="px-6 py-3 font-semibold">Dependencia</th>
+                            <th data-sort-type="number" scope="col" class="px-4 py-3 text-right font-semibold">Entrada</th>
+                            <th data-sort-type="number" scope="col" class="px-4 py-3 text-right font-semibold">Delegados</th>
+                            <th data-sort-type="number" scope="col" class="px-4 py-3 text-right font-semibold">Total</th>
+                            <th data-sort-type="none" scope="col" class="px-6 py-3 font-semibold">Magnitud</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach ($hijas as $h)
                             @php($tieneHijas = count($h->hijas) > 0)
                             <tr class="border-b border-line/70 last:border-0 hover:bg-paper/60">
-                                <th scope="row" class="px-6 py-4 text-left font-normal">
+                                <th scope="row" class="px-4 py-2.5 text-left font-normal">
                                     <a href="{{ $enlace($h->codigo) }}"
                                        class="group inline-flex items-center gap-2 font-medium text-ink hover:text-emerald">
                                         <span class="font-mono text-xs text-muted">{{ $h->codigo }}</span>
@@ -209,20 +183,20 @@
                                         <span aria-hidden="true" class="text-emerald opacity-0 transition group-hover:opacity-100">↗</span>
                                     </a>
                                     @unless ($h->activa)
-                                        <span class="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-muted">inactiva</span>
+                                        <span class="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-muted">inactiva</span>
                                     @endunless
                                     @if ($tieneHijas)
-                                        <p class="mt-0.5 text-[11px] text-muted">{{ count($h->hijas) }} subdependencia(s)</p>
+                                        <p class="mt-0.5 text-xs text-muted">{{ count($h->hijas) }} subdependencia(s)</p>
                                     @endif
                                 </th>
-                                <td class="px-4 py-4 text-right tabular-nums">{{ number_format($hEntrada($h)) }}</td>
-                                <td class="px-4 py-4 text-right tabular-nums">{{ number_format($hDelegados($h)) }}</td>
-                                <td class="px-4 py-4 text-right font-semibold tabular-nums">{{ number_format($hTotal($h)) }}</td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-2.5 text-right tabular-nums">{{ number_format($hEntrada($h)) }}</td>
+                                <td class="px-4 py-2.5 text-right tabular-nums">{{ number_format($hDelegados($h)) }}</td>
+                                <td class="px-4 py-2.5 text-right font-semibold tabular-nums">{{ number_format($hTotal($h)) }}</td>
+                                <td class="px-4 py-2.5">
                                     <div class="h-2 w-full overflow-hidden rounded-full bg-paper" role="img"
                                          aria-label="{{ $hTotal($h) }} pendientes">
                                         <span class="block h-full rounded-full bg-emerald"
-                                              style="width: {{ max(2, round($hTotal($h) / $maxHija * 100)) }}%"></span>
+                                              style="width: {{ $hTotal($h) > 0 ? max(2, round($hTotal($h) / $maxHija * 100)) : 0 }}%"></span>
                                     </div>
                                 </td>
                             </tr>
@@ -239,14 +213,14 @@
     @endif
 
     {{-- Pie de calidad: fecha, perfil y versión siempre visibles --}}
-    <footer class="mt-10 flex flex-wrap gap-x-8 gap-y-2 border-t border-line pt-5 text-xs text-muted">
+    <footer class="mt-4 flex flex-wrap gap-x-8 gap-y-2 border-t border-line pt-5 text-xs text-muted">
         <span><strong class="font-semibold text-ink">Publicación:</strong>
             {{ Carbon::parse($resumen->publicacion->fecha_publicacion)->translatedFormat('d \d\e F \d\e Y, H:i') }}</span>
         <span><strong class="font-semibold text-ink">Perfil:</strong> {{ ucfirst($resumen->publicacion->perfil) }}</span>
         <span><strong class="font-semibold text-ink">Versión de reglas:</strong> {{ $resumen->publicacion->version_reglas }}</span>
         <span><strong class="font-semibold text-ink">Unidad:</strong> asignaciones (destinos internos)</span>
         @if ($resumen->publicacion->nota)
-            <span class="w-full text-[11px] italic">{{ $resumen->publicacion->nota }}</span>
+            <span class="w-full text-xs italic">{{ $resumen->publicacion->nota }}</span>
         @endif
     </footer>
 </x-layouts.platform>

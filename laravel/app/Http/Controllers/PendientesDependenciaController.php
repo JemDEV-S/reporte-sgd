@@ -6,10 +6,12 @@ use App\Models\Publicacion;
 use App\Reportes\PendientesDependencia\ContextoReporte;
 use App\Reportes\PendientesDependencia\EscritorCsv;
 use App\Reportes\PendientesDependencia\EscritorXlsx;
+use App\Reportes\PendientesDependencia\EvolucionPendientes;
 use App\Reportes\PendientesDependencia\ExportacionDetalle;
 use App\Reportes\PendientesDependencia\ExportacionGeneral;
 use App\Reportes\PendientesDependencia\FiltrosPendientes;
 use App\Reportes\PendientesDependencia\MotorPendientesDependencia;
+use App\Reportes\PendientesDependencia\ResumenPendientes;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -25,7 +27,7 @@ class PendientesDependenciaController extends Controller
      */
     public function resumen(Request $request): View
     {
-        $publicacion = Publicacion::vigente();
+        $publicacion = $this->publicacionFijada($request);
         $areas = $this->areas();
 
         if ($publicacion === null) {
@@ -35,8 +37,10 @@ class PendientesDependenciaController extends Controller
             ]);
         }
 
-        $filtros = $this->filtrosDesde($request);
-        $resumen = (new MotorPendientesDependencia($publicacion, $filtros))->resumen();
+        $contexto = ContextoReporte::resolver($request->user(), $publicacion, $this->filtrosDesde($request));
+        $filtros = $contexto->filtros;
+        $resumen = (new MotorPendientesDependencia($publicacion, $filtros, $contexto))->resumen();
+        $busqueda = $this->busquedaDependencias($request);
 
         $codigoActual = $request->query('dependencia');
         $nodoActual = is_string($codigoActual) ? $resumen->fila($codigoActual) : null;
@@ -44,12 +48,25 @@ class PendientesDependenciaController extends Controller
         // Por defecto se muestran solo las cifras propias de cada dependencia;
         // el acumulado con descendencia es opcional (?acumulado=1).
         $acumulado = $request->boolean('acumulado');
+        $dias = $this->periodoDesde($request);
+        $codigos = $nodoActual === null ? array_keys($resumen->filas) : [$nodoActual->codigo];
+        if ($nodoActual !== null && $acumulado) {
+            $codigos = array_keys(array_filter($resumen->filas, fn ($fila) => collect($resumen->ruta($fila->codigo))->contains('codigo', $nodoActual->codigo)
+            ));
+        }
+        $evolucion = (new EvolucionPendientes)->obtener($contexto, $codigos, $dias);
+        $resultados = $busqueda === null ? [] : $resumen->buscar($busqueda);
 
         return view('reportes.pendientes-dependencia.resumen', [
             'areas' => $areas,
             'area' => 'reportes',
             'resumen' => $resumen,
             'nodoActual' => $nodoActual,
+            'busqueda' => $busqueda,
+            'resultados' => $resultados,
+            'rutasBusqueda' => collect($resultados)->mapWithKeys(fn ($fila) => [$fila->codigo => collect($resumen->ruta($fila->codigo))->pluck('nombre')->implode(' / ')])->all(),
+            'evolucion' => $evolucion,
+            'dias' => $dias,
             'filtros' => $filtros,
             'acumulado' => $acumulado,
             'request' => $request,
@@ -81,12 +98,16 @@ class PendientesDependenciaController extends Controller
 
         // Conserva los filtros en los enlaces de paginación.
         $detalle->destinos->appends($request->query());
+        $dias = $this->periodoDesde($request);
+        $evolucion = (new EvolucionPendientes)->obtener($contexto, [$dependencia], $dias);
 
         return response()
             ->view('reportes.pendientes-dependencia.detalle', [
                 'areas' => $areas,
                 'area' => 'reportes',
                 'detalle' => $detalle,
+                'evolucion' => $evolucion,
+                'dias' => $dias,
                 'contexto' => $contexto,
                 'filtros' => $contexto->filtros,
                 'request' => $request,
@@ -176,7 +197,7 @@ class PendientesDependenciaController extends Controller
      */
     public function general(Request $request): View
     {
-        $publicacion = Publicacion::vigente();
+        $publicacion = $this->publicacionFijada($request);
         $areas = $this->areas();
 
         if ($publicacion === null) {
@@ -186,15 +207,21 @@ class PendientesDependenciaController extends Controller
             ]);
         }
 
-        $filtros = $this->filtrosDesde($request);
-        $resumen = (new MotorPendientesDependencia($publicacion, $filtros))->resumen();
-        $exportacion = new ExportacionGeneral($resumen);
+        $contexto = ContextoReporte::resolver($request->user(), $publicacion, $this->filtrosDesde($request));
+        $filtros = $contexto->filtros;
+        $resumen = (new MotorPendientesDependencia($publicacion, $filtros, $contexto))->resumen();
+        $busqueda = $this->busquedaDependencias($request);
+        if ($busqueda !== null) {
+            $resumen = new ResumenPendientes($publicacion, $filtros, $resumen->buscar($busqueda));
+        }
+        $exportacion = new ExportacionGeneral($resumen, $busqueda);
 
         return view('reportes.pendientes-dependencia.general', [
             'areas' => $areas,
             'area' => 'reportes',
             'resumen' => $resumen,
             'exportacion' => $exportacion,
+            'busqueda' => $busqueda,
             'filtros' => $filtros,
             'request' => $request,
         ]);
@@ -250,12 +277,17 @@ class PendientesDependenciaController extends Controller
     {
         Gate::authorize('reportes.exportar');
 
-        $publicacion = Publicacion::vigente();
+        $publicacion = $this->publicacionFijada($request);
         abort_if($publicacion === null, 404, 'No hay una publicación vigente para exportar.');
 
-        $filtros = $this->filtrosDesde($request);
-        $resumen = (new MotorPendientesDependencia($publicacion, $filtros))->resumen();
-        $exportacion = new ExportacionGeneral($resumen);
+        $contexto = ContextoReporte::resolver($request->user(), $publicacion, $this->filtrosDesde($request));
+        $filtros = $contexto->filtros;
+        $resumen = (new MotorPendientesDependencia($publicacion, $filtros, $contexto))->resumen();
+        $busqueda = $this->busquedaDependencias($request);
+        if ($busqueda !== null) {
+            $resumen = new ResumenPendientes($publicacion, $filtros, $resumen->buscar($busqueda));
+        }
+        $exportacion = new ExportacionGeneral($resumen, $busqueda);
 
         if ($this->formato($request) === 'xlsx') {
             return (new EscritorXlsx)->descargar(
@@ -338,6 +370,21 @@ class PendientesDependenciaController extends Controller
     private function formato(Request $request): string
     {
         return $request->query('formato') === 'xlsx' ? 'xlsx' : 'csv';
+    }
+
+    private function busquedaDependencias(Request $request): ?string
+    {
+        $validado = $request->validate(['buscar' => 'nullable|string|max:100']);
+        $texto = trim($validado['buscar'] ?? '');
+
+        return $texto === '' ? null : $texto;
+    }
+
+    private function periodoDesde(Request $request): int
+    {
+        $validado = $request->validate(['periodo' => 'nullable|integer|in:30,60,90']);
+
+        return (int) ($validado['periodo'] ?? 30);
     }
 
     private function filtrosDesde(Request $request): FiltrosPendientes
