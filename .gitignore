@@ -1,0 +1,16 @@
+.analisis-sgd/
+.env
+.env.*
+!.env.example
+__pycache__/
+*.log
+.DS_Store
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+Thumbs.db
+/.claude
+/.docs
+/docs/

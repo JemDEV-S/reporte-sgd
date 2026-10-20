@@ -1,0 +1,37 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --color-ink: #102438;
+    --color-emerald: #087f70;
+    --color-mint: #68d6bc;
+    --color-paper: #f5f7f9;
+    --color-muted: #5d6c7b;
+    --color-line: #dfe6eb;
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+@layer base {
+    :focus-visible { outline: 3px solid #159d8c; outline-offset: 4px; }
+    button, summary { cursor: pointer; }
+}
+
+@layer components {
+    .eyebrow { @apply text-[10px] font-bold tracking-[.2em]; }
+    .btn { @apply inline-flex min-h-11 items-center justify-center gap-3 rounded-lg px-5 py-3 text-sm font-semibold transition-colors; }
+    .btn-primary { @apply bg-emerald text-white hover:bg-ink; }
+    .btn-secondary { @apply border border-line bg-white text-ink hover:bg-paper; }
+    .btn-quiet { @apply px-2 py-2 text-xs text-muted hover:bg-paper hover:text-ink; }
+    .field { @apply min-h-12 w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm text-ink placeholder:text-slate-400 focus:border-emerald aria-invalid:border-red-600; }
+    .nav-link { @apply flex min-h-11 items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-300 hover:bg-white/5 hover:text-white aria-[current=page]:bg-white/10 aria-[current=page]:text-mint; }
+    .area-card { @apply flex flex-col rounded-2xl border border-line bg-white p-7 transition-colors hover:border-emerald/40; }
+    .status-label { @apply inline-flex rounded-full border border-emerald/15 bg-emerald/5 px-3 py-1 text-[10px] font-semibold text-emerald; }
+    .skip-link { @apply sr-only fixed top-3 left-3 z-50 rounded-lg bg-white p-3 text-ink focus:not-sr-only focus:fixed; }
+}
+
+.orbital { position: absolute; width: 660px; height: 660px; right: -390px; bottom: -330px; border: 1px solid rgb(104 214 188 / .15); border-radius: 50%; box-shadow: 0 0 0 65px rgb(104 214 188 / .035), 0 0 0 130px rgb(104 214 188 / .025); pointer-events: none; }
