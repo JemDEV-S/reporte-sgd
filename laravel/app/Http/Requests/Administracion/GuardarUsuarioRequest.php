@@ -34,7 +34,7 @@ class GuardarUsuarioRequest extends FormRequest
             'apellidos' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($usuario)],
             'activo' => ['required', 'boolean'],
-            'password' => [$usuario ? 'nullable' : 'required', 'string', 'max:72', 'confirmed', Password::min(12)->letters()->numbers()],
+            'password' => [$usuario ? 'nullable' : 'required', 'string', 'max:72', 'confirmed', Password::min(6)->letters()->numbers()],
             'roles' => ['sometimes', 'array', 'max:100'],
             'roles.*' => ['required', 'integer', 'distinct', 'exists:roles,id'],
         ];
