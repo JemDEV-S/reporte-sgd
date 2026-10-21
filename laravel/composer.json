@@ -42,7 +42,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#fdba74\" \"php artisan serve --host=0.0.0.0\" \"npm run dev\" --names=server,vite --kill-others"
+            "npx concurrently --restart-tries -1 --restart-after 3000 -c \"#93c5fd,#fdba74,#a7f3d0,#c4b5fd\" \"php artisan serve --host=0.0.0.0\" \"npm run dev\" \"node scripts/servicio.mjs scheduler\" \"node scripts/servicio.mjs worker\" --names=server,vite,scheduler,worker --kill-others"
         ],
         "test": [
             "@php artisan config:clear --ansi",

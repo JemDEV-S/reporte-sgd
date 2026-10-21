@@ -1,5 +1,5 @@
-@props(['areas', 'area'])
-<x-layouts.base :title="$area ? $areas[$area]['name'] : 'Inicio'">
+@props(['areas', 'area', 'title' => null])
+<x-layouts.base :title="$title ?? ($area ? $areas[$area]['name'] : 'Inicio')">
 <div class="platform-shell min-h-screen lg:grid lg:grid-cols-[240px_minmax(0,1fr)]">
 <aside class="platform-sidebar border-r border-white/5 bg-[#142b35] text-white">
 <div class="flex flex-col px-4 py-5 lg:sticky lg:top-0 lg:h-dvh lg:py-7">
@@ -18,7 +18,7 @@
 </aside>
 <div class="min-w-0">
 <header class="platform-topbar flex min-h-14 flex-wrap items-center justify-between gap-3 border-b border-line bg-white px-4 py-2 sm:px-6 lg:px-8">
-<p class="flex items-center gap-2 text-xs text-muted"><span class="font-semibold tracking-widest text-ink">SIRMD</span><span class="text-slate-300" aria-hidden="true">/</span>{{ $area ? $areas[$area]['name'] : 'Inicio' }}</p>
+<p class="flex items-center gap-2 text-xs text-muted"><span class="font-semibold tracking-widest text-ink">SIRMD</span><span class="text-slate-300" aria-hidden="true">/</span>{{ $title ?? ($area ? $areas[$area]['name'] : 'Inicio') }}</p>
 <div class="flex items-center gap-3 sm:gap-5">
 <span class="hidden size-9 items-center justify-center rounded-full bg-emerald/10 text-sm font-semibold text-emerald sm:inline-flex" aria-hidden="true">{{ mb_substr(auth()->user()->nombre_completo, 0, 1) }}</span>
 <span class="max-w-40 truncate text-sm font-medium sm:max-w-56">{{ auth()->user()->nombre_completo }}</span>

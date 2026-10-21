@@ -31,6 +31,15 @@ return [
 
     'connections' => [
 
+        'ingesta' => [
+            'driver' => 'database',
+            'connection' => null,
+            'table' => 'jobs',
+            'queue' => 'sgd',
+            'retry_after' => 7200,
+            'after_commit' => false,
+        ],
+
         'sync' => [
             'driver' => 'sync',
         ],

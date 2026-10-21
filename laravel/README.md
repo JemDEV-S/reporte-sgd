@@ -8,6 +8,11 @@ Para ejecutar desde esta carpeta:
 composer run dev
 ```
 
+Este comando inicia Laravel, Vite, el scheduler y el worker de sincronización.
+Los dos servicios se supervisan con `scripts/servicio.mjs` y se reinician si
+terminan, incluso después de `php artisan queue:restart` o por límites de memoria.
+No hace falta iniciar otros procesos de scheduler o worker durante el desarrollo.
+
 La instalación, configuración de PostgreSQL y verificaciones se describen en el [README del proyecto](../README.md). La decisión sobre PHP y posibles componentes Python está documentada en [viabilidad tecnológica](../docs/viabilidad-tecnologica.md).
 
 ## Ingesta del SGD
@@ -32,8 +37,10 @@ solapamiento de seguridad.
 
 ### Programación automática
 
-El incremental está programado cada 15 minutos en `routes/console.php`. Para que
-corra solo, el entorno debe ejecutar `php artisan schedule:run` **cada minuto**.
+La frecuencia se administra en **Administración → Sincronización SGD**, con 15
+minutos por defecto. El scheduler comprueba la programación guardada cada minuto.
+El entorno debe ejecutar `php artisan schedule:run` **cada minuto**, o mantener
+activo `php artisan schedule:work` durante el desarrollo.
 
 En Windows, crear una tarea en el Programador de tareas que ejecute cada minuto:
 
@@ -48,4 +55,22 @@ En Linux, una entrada de cron:
 * * * * * cd /ruta/al/proyecto/laravel && php artisan schedule:run >> /dev/null 2>&1
 ```
 
-La salida de la ingesta se agrega en `storage/logs/ingesta-sgd.log`.
+Fuera del arranque de desarrollo integrado, debe mantenerse un worker dedicado:
+
+```powershell
+php artisan queue:work ingesta --queue=sgd --sleep=3 --timeout=3600 --tries=0 --memory=256
+```
+
+En Windows, `powershell -NoProfile -File scripts/Start-SgdWorker.ps1` lo supervisa
+y lo reinicia si termina. Para continuidad tras reiniciar el equipo, registrar
+este script en el servicio de arranque del entorno. Detalles y limitaciones en
+[SINCRONIZACION.md](SINCRONIZACION.md).
+
+El historial estructurado se consulta en Administración. La salida del scheduler
+se agrega en `storage/logs/ingesta-sgd.log`.
+
+## Administración
+
+Usuarios, roles/permisos y auditoría están disponibles en el menú Administración,
+según las capacidades de la cuenta. Ver [alcance, arquitectura y controles](ADMINISTRACION.md).
+La nueva tabla de auditoría requiere aplicar las migraciones con `php artisan migrate`.

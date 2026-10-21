@@ -1,9 +1,10 @@
-@props(['name', 'label', 'type' => 'text', 'hint' => null])
+@props(['name', 'label', 'type' => 'text', 'hint' => null, 'value' => null])
+@php($displayValue = old($name, $value))
 <div>
 <label for="{{ $name }}" class="mb-2 block text-sm font-semibold">{{ $label }}</label>
 <div class="relative">
 <input id="{{ $name }}" name="{{ $name }}" type="{{ $type }}" 
-@if ($type !== 'password') value="{{ old($name) }}" @endif
+@if ($type !== 'password') value="{{ is_scalar($displayValue) ? $displayValue : '' }}" @endif
  @error($name) aria-invalid="true" @enderror 
 @if ($errors->has($name) || $hint) aria-describedby="{{ $name }}-help" @endif
  {{ $attributes->class(['field', 'pr-24' => $type === 'password']) }}>

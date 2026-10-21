@@ -1,10 +1,16 @@
 import { initDynamicTables } from './dynamic-table';
 import './bootstrap';
 import { iniciarModalIntegrantes } from './integrantes-modal';
+import { iniciarSeguimientoSincronizacion } from './sincronizacion-monitor';
 
 // El "abrir" se delega en document, así que registrar el listener no depende de
 // que el <dialog> ni el botón existan todavía (robusto en dev con Vite).
 iniciarModalIntegrantes();
+let detenerSeguimiento = iniciarSeguimientoSincronizacion(document.querySelector('[data-sync-monitor]'));
+window.addEventListener('pagehide', () => detenerSeguimiento());
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) detenerSeguimiento = iniciarSeguimientoSincronizacion(document.querySelector('[data-sync-monitor]'));
+});
 
 document.querySelectorAll('[data-password-toggle]').forEach((button) => {
     button.addEventListener('click', () => {

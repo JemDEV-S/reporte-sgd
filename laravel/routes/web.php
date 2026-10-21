@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Controllers\Administracion\AuditoriaController;
+use App\Http\Controllers\Administracion\RolController;
+use App\Http\Controllers\Administracion\SincronizacionController;
+use App\Http\Controllers\Administracion\UsuarioController;
 use App\Http\Controllers\ExploradorController;
 use App\Http\Controllers\InformeController;
 use App\Http\Controllers\PendientesDependenciaController;
@@ -17,6 +21,24 @@ Route::post('/logout', [SessionController::class, 'destroy'])->middleware('auth'
 
 Route::middleware(['auth', EnsurePlatformAccess::class])->group(function () {
     Route::get('/', PlatformController::class)->name('home');
+
+    Route::prefix('administracion')->name('admin.')->group(function () {
+        Route::middleware('can:fuentes.gestionar')->group(function () {
+            Route::get('sincronizacion', [SincronizacionController::class, 'index'])->name('sincronizacion.index');
+            Route::get('sincronizacion/estado', [SincronizacionController::class, 'estado'])->name('sincronizacion.estado');
+            Route::put('sincronizacion', [SincronizacionController::class, 'update'])->name('sincronizacion.update');
+            Route::post('sincronizacion/ejecutar', [SincronizacionController::class, 'ejecutar'])->name('sincronizacion.ejecutar');
+        });
+        Route::middleware('can:usuarios.gestionar')->group(function () {
+            Route::resource('usuarios', UsuarioController::class)
+                ->parameters(['usuarios' => 'usuario'])->except(['show', 'destroy']);
+        });
+        Route::middleware('can:roles.gestionar')->group(function () {
+            Route::resource('roles', RolController::class)
+                ->parameters(['roles' => 'rol'])->except(['show', 'destroy']);
+            Route::get('auditoria', AuditoriaController::class)->name('auditoria');
+        });
+    });
 
     // Catálogo de reportes. El primer reporte: pendientes por dependencia.
     Route::middleware('can:reportes.ver')->group(function () {
